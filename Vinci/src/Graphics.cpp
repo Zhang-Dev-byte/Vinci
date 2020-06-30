@@ -105,17 +105,29 @@ void Graphics::DrawTestTriangle()
 
 	struct Vertex
 	{
-		float x;
-		float y;
+		struct {
+			float x;
+			float y;
+		} Position;
+
+		struct {
+			unsigned char r;
+			unsigned char g;
+			unsigned char b;
+			unsigned char a;
+		} Color;
 	};
 
-	// create vertex buffer (1 2d triangle at center of screen)
-	const Vertex vertices[] =
+	Vertex vertices[] =
 	{
-		{ 0.0f,0.5f },
-		{ 0.5f,-0.5f },
-		{ -0.5f,-0.5f },
+		{ 0.0f,0.5f,255,0,0,0 },
+		{ 0.5f,-0.5f,0,255,0,0 },
+		{ -0.5f,-0.5f,0,0,255,0 },
+		{ -0.3f,0.3f,0,255,0,0 },
+		{ 0.3f,0.3f,0,0,255,0 },
+		{ 0.0f,-0.8f,255,0,0,0 },
 	};
+
 	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
 	D3D11_BUFFER_DESC bd = {};
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -132,6 +144,30 @@ void Graphics::DrawTestTriangle()
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
 	pContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
+
+
+	// create index buffer
+	const unsigned short indices[] =
+	{
+		0,1,2,
+		0,2,3,
+		0,4,1,
+		2,1,5,
+	};
+	wrl::ComPtr<ID3D11Buffer> pIndexBuffer;
+	D3D11_BUFFER_DESC ibd = {};
+	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibd.Usage = D3D11_USAGE_DEFAULT;
+	ibd.CPUAccessFlags = 0u;
+	ibd.MiscFlags = 0u;
+	ibd.ByteWidth = sizeof(indices);
+	ibd.StructureByteStride = sizeof(unsigned short);
+	D3D11_SUBRESOURCE_DATA isd = {};
+	isd.pSysMem = indices;
+	GFX_THROW_INFO(pDevice->CreateBuffer(&ibd, &isd, &pIndexBuffer));
+
+	// bind index buffer
+	pContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
 
 	// create pixel shader
@@ -158,6 +194,7 @@ void Graphics::DrawTestTriangle()
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
 		{ "Position",0,DXGI_FORMAT_R32G32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "Color",0,DXGI_FORMAT_R8G8B8A8_UNORM,0,8u,D3D11_INPUT_PER_VERTEX_DATA,0 },
 	};
 	GFX_THROW_INFO(pDevice->CreateInputLayout(
 		ied, (UINT)std::size(ied),
@@ -189,7 +226,7 @@ void Graphics::DrawTestTriangle()
 	pContext->RSSetViewports(1u, &vp);
 
 
-	GFX_THROW_INFO_ONLY(pContext->Draw((UINT)std::size(vertices), 0u));
+	GFX_THROW_INFO_ONLY(pContext->DrawIndexed((UINT)std::size(indices), 0u, 0u));
 }
 
 
