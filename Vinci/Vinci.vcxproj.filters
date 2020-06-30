@@ -95,4 +95,8 @@
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="res\VertexShader.hlsl" />
+    <FxCompile Include="res\PixelShader.hlsl" />
+  </ItemGroup>
 </Project>
